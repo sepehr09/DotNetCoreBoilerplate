@@ -13,7 +13,8 @@ public interface ITenantService
     Task DeleteTenantAsync(string id);
 
     // Current tenant operations
-    AppTenantInfo? GetCurrentTenant();
-    string? GetCurrentTenantId();
-    string? GetCurrentTenantIdentifier();
+    AppTenantInfo GetCurrentTenant();
+
+    // Cache operations
+    Task LoadTenantsIntoCacheAsync();
 }

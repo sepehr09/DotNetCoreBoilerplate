@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MyApp.Application.Common.Interfaces;
 using MyApp.Domain.Constants;
+using MyApp.Domain.Entities;
 using MyApp.Infrastructure.Identity;
 
 namespace MyApp.Infrastructure.Data;
@@ -28,13 +30,16 @@ public class ApplicationDbContextInitialiser
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
 
-    public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+    public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ITenantService tenantService)
     {
         _logger = logger;
         _context = context;
         _userManager = userManager;
         _roleManager = roleManager;
+        _tenantService = tenantService;
     }
+
+    private readonly ITenantService _tenantService;
 
     public async Task InitialiseAsync()
     {
@@ -67,6 +72,8 @@ public class ApplicationDbContextInitialiser
     {
         try
         {
+            // Load tenants into cache
+            await _tenantService.LoadTenantsIntoCacheAsync();
             // Default roles
             var administratorRole = new IdentityRole(Roles.Administrator);
 
@@ -85,6 +92,21 @@ public class ApplicationDbContextInitialiser
                 {
                     await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
                 }
+            }
+
+            // Seed, if necessary
+            if (!_context.Tenants.Any())
+            {
+                _context.Tenants.Add(new Tenant
+                {
+                    Id = 1,
+                    Identifier = "TestTenant",
+                    Name = "Tenant just for test",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                await _context.SaveChangesAsync();
             }
 
         }

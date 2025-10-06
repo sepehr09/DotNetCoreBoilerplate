@@ -5,7 +5,7 @@ using MyApp.Domain.Enums;
 
 namespace MyApp.Application.TodoLists.Queries.GetTodos;
 
-[Authorize]
+// [Authorize]
 public record GetTodosQuery : IRequest<TodosVm>;
 
 public class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, TodosVm>

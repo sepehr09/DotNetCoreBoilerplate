@@ -20,6 +20,7 @@ public class CustomExceptionHandler : IExceptionHandler
                 { typeof(NullReferenceException), HandleNullReferenceException },
                 { typeof(BusinessException), HandleBusinessException },
                 { typeof(InvalidOperationException), HandleInvalidOperationException },
+                { typeof(TenantNotDefinedException), HandleTenantNotDefinedException },
             };
     }
 
@@ -117,6 +118,18 @@ public class CustomExceptionHandler : IExceptionHandler
     {
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
         await httpContext.Response.WriteAsJsonAsync(new { error = ex.Message });
+    }
+
+    private async Task HandleTenantNotDefinedException(HttpContext httpContext, Exception ex)
+    {
+        httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Tenant Not Defined",
+            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+            Detail = ex.Message
+        });
     }
 
 }

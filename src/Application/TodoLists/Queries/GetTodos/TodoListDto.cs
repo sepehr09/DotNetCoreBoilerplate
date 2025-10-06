@@ -21,7 +21,8 @@ public class TodoListDto
     {
         public Mapping()
         {
-            CreateMap<TodoList, TodoListDto>();
+            CreateMap<TodoList, TodoListDto>()
+                .ForMember(d => d.Colour, opt => opt.MapFrom(s => s.Colour.ToString()));
         }
     }
 }

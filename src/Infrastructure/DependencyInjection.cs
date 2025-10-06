@@ -1,4 +1,5 @@
 ﻿using Finbuckle.MultiTenant;
+using Finbuckle.MultiTenant.Abstractions;
 using Finbuckle.MultiTenant.AspNetCore;
 using Finbuckle.MultiTenant.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using MyApp.Application.Common.Exceptions;
 using MyApp.Application.Common.Interfaces;
 using MyApp.Domain.Constants;
 using MyApp.Domain.Entities;
@@ -54,12 +56,9 @@ public static class DependencyInjection
         builder.Services.AddMultiTenant<AppTenantInfo>()
             // .WithHostStrategy()
             .WithStaticStrategy("TestTenant")
-            .WithInMemoryStore(options =>
-            {
-                options.IsCaseSensitive = true;
-                options.Tenants.Add(new AppTenantInfo { Identifier = "TestTenant", Id = "12345", Name = "Test tenant" });
-            });
-        // .WithDistributedCacheStore();
+            // .WithPerTenantAuthentication()
+            // .ShortCircuitWhenTenantNotResolved();
+            .WithDistributedCacheStore();
 
         /* ----------------------------- Authentication ----------------------------- */
         builder.Services.AddAuthentication()
