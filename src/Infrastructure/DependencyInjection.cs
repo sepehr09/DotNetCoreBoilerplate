@@ -35,7 +35,7 @@ public static class DependencyInjection
         });
 
         builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-        builder.Services.AddScoped<TenantService>();
+        builder.Services.AddScoped<ITenantService, TenantService>();
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
         /* ---------------------------------- Redis --------------------------------- */
@@ -52,9 +52,14 @@ public static class DependencyInjection
 
         /* -------------------------- Finbuckle.MultiTenant ------------------------- */
         builder.Services.AddMultiTenant<AppTenantInfo>()
-            .WithHostStrategy()
+            // .WithHostStrategy()
             .WithStaticStrategy("TestTenant")
-            .WithDistributedCacheStore();
+            .WithInMemoryStore(options =>
+            {
+                options.IsCaseSensitive = true;
+                options.Tenants.Add(new AppTenantInfo { Identifier = "TestTenant", Id = "12345", Name = "Test tenant" });
+            });
+        // .WithDistributedCacheStore();
 
         /* ----------------------------- Authentication ----------------------------- */
         builder.Services.AddAuthentication()
