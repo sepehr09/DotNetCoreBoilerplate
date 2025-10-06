@@ -1,0 +1,64 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Web/Web.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "BACK: Build project",
+      "type": "shell",
+      "command": "dotnet build",
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "label": "BACK: Add migration",
+      "type": "shell",
+      "command": "SkipNSwag=true dotnet ef migrations add \"${input:name}\" -p src/Infrastructure -s src/Web -o Data/Migrations",
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "label": "BACK: Update database",
+      "type": "shell",
+      "command": "dotnet ef database update -p src/Infrastructure -s src/Web",
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "label": "BACK: Remove last migration",
+      "type": "shell",
+      "command": "dotnet ef migrations remove -p src/Infrastructure -s src/Web",
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "label": "BACK: Drop database",
+      "type": "shell",
+      "command": "dotnet ef database drop -p src/Infrastructure -s src/Web --no-build",
+      "group": {
+        "kind": "build"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "name",
+      "description": "Name?",
+      "type": "promptString"
+    }
+  ]
+}

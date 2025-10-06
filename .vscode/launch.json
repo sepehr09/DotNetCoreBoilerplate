@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "MyApp.Web",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "launchSettingsProfile": "MyApp.Web",
+      "program": "${workspaceFolder}/artifacts/bin/Web/debug/MyApp.Web.dll",
+      "cwd": "${workspaceFolder}/src/Web"
+    }
+  ]
+}
