@@ -77,7 +77,6 @@ public class TenantService : ITenantService
 
         existingTenant.Identifier = tenant.Identifier;
         existingTenant.Name = tenant.Name;
-        existingTenant.ConnectionString = tenant.ConnectionString;
         existingTenant.IsActive = tenant.IsActive;
         existingTenant.UpdatedAt = DateTime.UtcNow;
         existingTenant.UpdatedBy = tenant.UpdatedBy;
