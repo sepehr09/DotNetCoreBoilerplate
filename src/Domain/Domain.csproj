@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Finbuckle.MultiTenant.AspNetCore" />
     <PackageReference Include="MediatR" />
   </ItemGroup>
 

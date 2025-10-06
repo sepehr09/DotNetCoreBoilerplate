@@ -1,3 +1,4 @@
+using Finbuckle.MultiTenant;
 using MyApp.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +53,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler(options => { });
+
+app.UseMultiTenant();
 
 app.Map("/", () => Results.Redirect("/api"));
 

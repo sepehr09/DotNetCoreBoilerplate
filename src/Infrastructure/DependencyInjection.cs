@@ -1,10 +1,16 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Finbuckle.MultiTenant;
+using Finbuckle.MultiTenant.AspNetCore;
+using Finbuckle.MultiTenant.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using MyApp.Application.Common.Interfaces;
 using MyApp.Domain.Constants;
+using MyApp.Domain.Entities;
+using MyApp.Infrastructure.Authorization;
 using MyApp.Infrastructure.Data;
 using MyApp.Infrastructure.Data.Interceptors;
 using MyApp.Infrastructure.Identity;
@@ -29,14 +35,33 @@ public static class DependencyInjection
             options.ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
 
-
         builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-
+        builder.Services.AddScoped<TenantService>();
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
+        /* ---------------------------------- Redis --------------------------------- */
+        var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+
+        if (!string.IsNullOrEmpty(redisConnectionString))
+        {
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnectionString;
+                options.InstanceName = "MyApp";
+            });
+        }
+
+        /* -------------------------- Finbuckle.MultiTenant ------------------------- */
+        builder.Services.AddMultiTenant<AppTenantInfo>()
+            .WithHostStrategy()
+            .WithStaticStrategy("TestTenant")
+            .WithDistributedCacheStore();
+
+        /* ----------------------------- Authentication ----------------------------- */
         builder.Services.AddAuthentication()
             .AddBearerToken(IdentityConstants.BearerScheme);
 
+        /* ------------------------------ Authorization ----------------------------- */
         builder.Services.AddAuthorizationBuilder();
 
         builder.Services
@@ -51,8 +76,14 @@ public static class DependencyInjection
         builder.Services.AddAuthorization(options =>
             options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
 
+        // Add tenant authorization
+        builder.Services.AddSingleton<IAuthorizationHandler, TenantAuthorizationHandler>();
+
         // file storage services
-        builder.Services.AddScoped<IFileStorageService, MinioStorageService>();
         builder.Services.Configure<MinioSettings>(builder.Configuration.GetSection("MinIO"));
+        builder.Services.AddScoped<IFileStorageService, MinioStorageService>();
+
+        // distributed cache service
+        builder.Services.AddScoped<IDistributedCacheService, DistributedCacheService>();
     }
 }

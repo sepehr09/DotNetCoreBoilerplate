@@ -1,6 +1,7 @@
-﻿using MyApp.Domain.Entities;
+﻿using Finbuckle.MultiTenant;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using MyApp.Domain.Entities;
 
 namespace MyApp.Infrastructure.Data.Configurations;
 
@@ -11,5 +12,7 @@ public class TodoItemConfiguration : IEntityTypeConfiguration<TodoItem>
         builder.Property(t => t.Title)
             .HasMaxLength(200)
             .IsRequired();
+
+        builder.IsMultiTenant();
     }
 }

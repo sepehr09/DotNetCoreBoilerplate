@@ -21,6 +21,21 @@ services:
       timeout: 10s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - myApp_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
   minio:
     image: minio/minio:latest
     # should disable in production

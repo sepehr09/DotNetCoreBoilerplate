@@ -39,7 +39,7 @@ Create a new query:
 dotnet new ca-usecase -n GetTodos -fn TodoLists -ut query -rt TodosVm
 ```
 
-If you encounter the error *"No templates or subcommands found matching: 'ca-usecase'."*, install the template and try again:
+If you encounter the error _"No templates or subcommands found matching: 'ca-usecase'."_, install the template and try again:
 
 ```bash
 dotnet new install Clean.Architecture.Solution.Template::9.0.12
@@ -50,9 +50,19 @@ dotnet new install Clean.Architecture.Solution.Template::9.0.12
 The solution contains unit, integration, and functional tests.
 
 To run the tests:
+
 ```bash
 dotnet test
 ```
 
 ## Help
+
 To learn more about the template go to the [project website](https://github.com/jasontaylordev/CleanArchitecture). Here you can find additional guidance, request new features, report a bug, and discuss the template with other users.
+
+## Extras
+
+- Dockerized with postgresql and configured to pass `.env` file to appSettings.
+- MultiTenancy using finbuckle package.
+- FileStorage service using Minio (compatible with S3).
+- redis
+- configured Distributed caching (using redis)
