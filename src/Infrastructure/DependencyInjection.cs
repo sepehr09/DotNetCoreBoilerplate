@@ -10,7 +10,6 @@ using Microsoft.Extensions.Hosting;
 using MyApp.Application.Common.Interfaces;
 using MyApp.Domain.Constants;
 using MyApp.Domain.Entities;
-using MyApp.Infrastructure.Authorization;
 using MyApp.Infrastructure.Data;
 using MyApp.Infrastructure.Data.Interceptors;
 using MyApp.Infrastructure.Identity;
@@ -75,9 +74,6 @@ public static class DependencyInjection
 
         builder.Services.AddAuthorization(options =>
             options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
-
-        // Add tenant authorization
-        builder.Services.AddSingleton<IAuthorizationHandler, TenantAuthorizationHandler>();
 
         // file storage services
         builder.Services.Configure<MinioSettings>(builder.Configuration.GetSection("MinIO"));
