@@ -1,10 +1,9 @@
-﻿using MyApp.Domain.Constants;
-using MyApp.Domain.Entities;
-using MyApp.Infrastructure.Identity;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MyApp.Domain.Constants;
+using MyApp.Infrastructure.Identity;
 
 namespace MyApp.Infrastructure.Data;
 
@@ -66,43 +65,33 @@ public class ApplicationDbContextInitialiser
 
     public async Task TrySeedAsync()
     {
-        // Default roles
-        var administratorRole = new IdentityRole(Roles.Administrator);
-
-        if (_roleManager.Roles.All(r => r.Name != administratorRole.Name))
+        try
         {
-            await _roleManager.CreateAsync(administratorRole);
-        }
+            // Default roles
+            var administratorRole = new IdentityRole(Roles.Administrator);
 
-        // Default users
-        var administrator = new ApplicationUser { UserName = "administrator@localhost", Email = "administrator@localhost" };
-
-        if (_userManager.Users.All(u => u.UserName != administrator.UserName))
-        {
-            await _userManager.CreateAsync(administrator, "Administrator1!");
-            if (!string.IsNullOrWhiteSpace(administratorRole.Name))
+            if (_roleManager.Roles.All(r => r.Name != administratorRole.Name))
             {
-                await _userManager.AddToRolesAsync(administrator, new [] { administratorRole.Name });
+                await _roleManager.CreateAsync(administratorRole);
             }
-        }
 
-        // Default data
-        // Seed, if necessary
-        if (!_context.TodoLists.Any())
-        {
-            _context.TodoLists.Add(new TodoList
+            // Default users
+            var administrator = new ApplicationUser { UserName = "administrator@localhost", Email = "administrator@localhost" };
+
+            if (_userManager.Users.All(u => u.UserName != administrator.UserName))
             {
-                Title = "Todo List",
-                Items =
+                await _userManager.CreateAsync(administrator, "Administrator1!");
+                if (!string.IsNullOrWhiteSpace(administratorRole.Name))
                 {
-                    new TodoItem { Title = "Make a todo list 📃" },
-                    new TodoItem { Title = "Check off the first item ✅" },
-                    new TodoItem { Title = "Realise you've already done two things on the list! 🤯"},
-                    new TodoItem { Title = "Reward yourself with a nice, long nap 🏆" },
+                    await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
                 }
-            });
+            }
 
-            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during database seeding");
+            throw;
         }
     }
 }
