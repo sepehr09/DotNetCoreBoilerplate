@@ -21,7 +21,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IMultiTenantContextAccessor<AppTenantInfo>? multiTenantContextAccessor = null, IConfiguration? configuration = null) : base(options)
     {
         _configuration = configuration;
-        TenantInfo = multiTenantContextAccessor?.MultiTenantContext?.TenantInfo;
+        if (_configuration?.GetValue<bool>("IsMultiTenant") == true)
+        {
+            TenantInfo = multiTenantContextAccessor?.MultiTenantContext?.TenantInfo;
+        }
     }
 
 
@@ -34,13 +37,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-        // Configure all entity types marked with the [MultiTenant] data attribute
-        // Only if multi-tenancy is enabled
-        if (_configuration?.GetValue<bool>("IsMultiTenant") == true)
-        {
-            builder.ConfigureMultiTenant();
-        }
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
