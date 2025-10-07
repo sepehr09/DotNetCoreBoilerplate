@@ -4,7 +4,7 @@ using Finbuckle.MultiTenant.Abstractions;
 using Finbuckle.MultiTenant.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using MyApp.Application.Common.Exceptions;
+using Microsoft.Extensions.Configuration;
 using MyApp.Application.Common.Interfaces;
 using MyApp.Domain.Entities;
 using MyApp.Infrastructure.Identity;
@@ -16,10 +16,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public ITenantInfo? TenantInfo { get; }
     public TenantMismatchMode TenantMismatchMode { get; } = TenantMismatchMode.Throw;
     public TenantNotSetMode TenantNotSetMode { get; } = TenantNotSetMode.Throw;
+    private readonly IConfiguration? _configuration;
 
-
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IMultiTenantContextAccessor<AppTenantInfo>? multiTenantContextAccessor = null) : base(options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IMultiTenantContextAccessor<AppTenantInfo>? multiTenantContextAccessor = null, IConfiguration? configuration = null) : base(options)
     {
+        _configuration = configuration;
         TenantInfo = multiTenantContextAccessor?.MultiTenantContext?.TenantInfo;
     }
 
@@ -33,18 +34,33 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // Configure all entity types marked with the [MultiTenant] data attribute
+        // Only if multi-tenancy is enabled
+        if (_configuration?.GetValue<bool>("IsMultiTenant") == true)
+        {
+            builder.ConfigureMultiTenant();
+        }
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        this.EnforceMultiTenant();
+        // Only enforce multi-tenancy if it's enabled
+        if (_configuration?.GetValue<bool>("IsMultiTenant") == true)
+        {
+            this.EnforceMultiTenant();
+        }
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default(CancellationToken))
     {
-        this.EnforceMultiTenant();
+        // Only enforce multi-tenancy if it's enabled
+        if (_configuration?.GetValue<bool>("IsMultiTenant") == true)
+        {
+            this.EnforceMultiTenant();
+        }
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 

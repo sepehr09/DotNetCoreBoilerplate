@@ -53,12 +53,15 @@ public static class DependencyInjection
         }
 
         /* -------------------------- Finbuckle.MultiTenant ------------------------- */
-        builder.Services.AddMultiTenant<AppTenantInfo>()
-            // .WithHostStrategy()
-            .WithStaticStrategy("TestTenant")
-            // .WithPerTenantAuthentication()
-            // .ShortCircuitWhenTenantNotResolved();
-            .WithDistributedCacheStore();
+        if (builder.Configuration.GetValue<bool>("IsMultiTenant"))
+        {
+            builder.Services.AddMultiTenant<AppTenantInfo>()
+                // .WithHostStrategy()
+                .WithStaticStrategy("TestTenant")
+                // .WithPerTenantAuthentication()
+                // .ShortCircuitWhenTenantNotResolved();
+                .WithDistributedCacheStore();
+        }
 
         /* ----------------------------- Authentication ----------------------------- */
         builder.Services.AddAuthentication()

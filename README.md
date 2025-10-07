@@ -51,7 +51,7 @@ The solution contains unit, integration, and functional tests.
 
 To run the tests:
 
-```bash
+```**bash**
 dotnet test
 ```
 
@@ -66,3 +66,8 @@ To learn more about the template go to the [project website](https://github.com/
 - FileStorage service using Minio (compatible with S3).
 - redis
 - configured Distributed caching (using redis)
+
+## Multi tenancy instruction
+
+1. Multi tenancy feature can be enabled/disabled in `app settings` with `IsMultiTenant` bool.
+2. For Configure an entity type to be multi-tenant, use [IsMultiTenant()](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/EFCore#using-the-fluent-api) on EntityTypeBuilder.

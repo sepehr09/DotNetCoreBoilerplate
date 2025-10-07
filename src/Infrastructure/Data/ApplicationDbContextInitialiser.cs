@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MyApp.Application.Common.Interfaces;
 using MyApp.Domain.Constants;
@@ -29,17 +31,21 @@ public class ApplicationDbContextInitialiser
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly ITenantService _tenantService;
+    private readonly IConfiguration _configuration;
 
-    public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ITenantService tenantService)
+    private readonly IHostEnvironment _environment;
+
+    public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ITenantService tenantService, IConfiguration configuration, IHostEnvironment environment)
     {
         _logger = logger;
         _context = context;
         _userManager = userManager;
         _roleManager = roleManager;
         _tenantService = tenantService;
+        _configuration = configuration;
+        _environment = environment;
     }
-
-    private readonly ITenantService _tenantService;
 
     public async Task InitialiseAsync()
     {
@@ -47,6 +53,11 @@ public class ApplicationDbContextInitialiser
         {
             await _context.Database.MigrateAsync();
 
+            // Load tenants into cache only if multi-tenancy is enabled
+            if (_configuration.GetValue<bool>("IsMultiTenant"))
+            {
+                await _tenantService.LoadTenantsIntoCacheAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -72,8 +83,6 @@ public class ApplicationDbContextInitialiser
     {
         try
         {
-            // Load tenants into cache
-            await _tenantService.LoadTenantsIntoCacheAsync();
             // Default roles
             var administratorRole = new IdentityRole(Roles.Administrator);
 
@@ -82,20 +91,24 @@ public class ApplicationDbContextInitialiser
                 await _roleManager.CreateAsync(administratorRole);
             }
 
-            // Default users
-            var administrator = new ApplicationUser { UserName = "administrator@localhost", Email = "administrator@localhost" };
-
-            if (_userManager.Users.All(u => u.UserName != administrator.UserName))
+            // Seed default users only in development environment
+            if (_environment.IsDevelopment())
             {
-                await _userManager.CreateAsync(administrator, "Administrator1!");
-                if (!string.IsNullOrWhiteSpace(administratorRole.Name))
+                // Default users
+                var administrator = new ApplicationUser { UserName = "administrator@localhost", Email = "administrator@localhost" };
+
+                if (_userManager.Users.All(u => u.UserName != administrator.UserName))
                 {
-                    await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
+                    await _userManager.CreateAsync(administrator, "Administrator1!");
+                    if (!string.IsNullOrWhiteSpace(administratorRole.Name))
+                    {
+                        await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
+                    }
                 }
             }
 
             // Seed, if necessary
-            if (!_context.Tenants.Any())
+            if (!_context.Tenants.Any() && _configuration.GetValue<bool>("IsMultiTenant"))
             {
                 _context.Tenants.Add(new Tenant
                 {
