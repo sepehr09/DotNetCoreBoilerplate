@@ -55,6 +55,8 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler(options => { });
 
 app.UseMultiTenant();
+app.UseAuthentication(); // Add this line to enable authentication middleware
+app.UseAuthorization();  // Add this line to enable authorization middleware
 
 app.Map("/", () => Results.Redirect("/api"));
 

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Finbuckle.MultiTenant;
 using Finbuckle.MultiTenant.Abstractions;
 using Microsoft.AspNetCore.Http;
@@ -32,6 +33,18 @@ public class TenantService : ITenantService
     public async Task<List<Tenant>> GetAllTenantsAsync()
     {
         return await _context.Tenants.ToListAsync();
+    }
+
+    /// <summary>
+    /// Generates a cryptographically secure random JWT key
+    /// </summary>
+    /// <returns>A base64 encoded string representing the JWT key</returns>
+    private string GenerateJwtKey()
+    {
+        using var rng = RandomNumberGenerator.Create();
+        var bytes = new byte[64]; // 512 bits
+        rng.GetBytes(bytes);
+        return Convert.ToBase64String(bytes);
     }
 
     public async Task<Tenant?> GetTenantByIdAsync(string id)
@@ -160,31 +173,10 @@ public class TenantService : ITenantService
                         continue;
                     }
 
-                    var appTenantInfo = new AppTenantInfo
-                    {
-                        Id = tenant.Id.ToString(),
-                        Identifier = tenant.Identifier,
-                        Name = tenant.Name,
-                        IsActive = tenant.IsActive,
-                        CreatedAt = tenant.CreatedAt,
-                        CreatedBy = tenant.CreatedBy,
-                        UpdatedAt = tenant.UpdatedAt,
-                        UpdatedBy = tenant.UpdatedBy
-                    };
+                    await AddTenantToCacheAsync(tenant);
 
-                    // Use TryAddAsync to add tenant to the store
-                    var result = await _tenantStore.TryAddAsync(appTenantInfo);
-
-                    if (result)
-                    {
-                        loadedCount++;
-                        _logger.LogInformation("Loaded tenant into cache: {Identifier} (ID: {Id})", tenant.Identifier, tenant.Id);
-                    }
-                    else
-                    {
-                        skippedCount++;
-                        _logger.LogWarning("Tenant already exists in cache: {Identifier} (ID: {Id})", tenant.Identifier, tenant.Id);
-                    }
+                    loadedCount++;
+                    _logger.LogInformation("Loaded tenant into cache: {Identifier} (ID: {Id})", tenant.Identifier, tenant.Id);
                 }
 
                 _logger.LogInformation("Tenant cache loading completed. Loaded: {LoadedCount}, Skipped: {SkippedCount}", loadedCount, skippedCount);
@@ -206,17 +198,7 @@ public class TenantService : ITenantService
             return;
         }
 
-        var appTenantInfo = new AppTenantInfo
-        {
-            Id = tenant.Id.ToString(),
-            Identifier = tenant.Identifier,
-            Name = tenant.Name,
-            IsActive = tenant.IsActive,
-            CreatedAt = tenant.CreatedAt,
-            CreatedBy = tenant.CreatedBy,
-            UpdatedAt = tenant.UpdatedAt,
-            UpdatedBy = tenant.UpdatedBy
-        };
+        var appTenantInfo = CreateAppTenantInfo(tenant);
 
         try
         {
@@ -236,15 +218,9 @@ public class TenantService : ITenantService
         }
     }
 
-    private async Task UpdateTenantInCacheAsync(Tenant tenant)
+    private AppTenantInfo CreateAppTenantInfo(Tenant tenant)
     {
-        if (!tenant.IsActive)
-        {
-            _logger.LogWarning("Skipping cache for inactive tenant: {Identifier}", tenant.Identifier);
-            return;
-        }
-
-        var appTenantInfo = new AppTenantInfo
+        return new AppTenantInfo
         {
             Id = tenant.Id.ToString(),
             Identifier = tenant.Identifier,
@@ -253,8 +229,22 @@ public class TenantService : ITenantService
             CreatedAt = tenant.CreatedAt,
             CreatedBy = tenant.CreatedBy,
             UpdatedAt = tenant.UpdatedAt,
-            UpdatedBy = tenant.UpdatedBy
+            UpdatedBy = tenant.UpdatedBy,
+            JwtAuthority = GenerateJwtKey(),
+            JwtIssuer = $"http://{tenant.Identifier}.localhost:5001", // Using HTTP for development to avoid HTTPS certificate issues
+            JwtAudience = $"{tenant.Identifier}-api"
         };
+    }
+
+    private async Task UpdateTenantInCacheAsync(Tenant tenant)
+    {
+        if (!tenant.IsActive)
+        {
+            _logger.LogWarning("Skipping cache for inactive tenant: {Identifier}", tenant.Identifier);
+            return;
+        }
+
+        var appTenantInfo = CreateAppTenantInfo(tenant);
 
         try
         {

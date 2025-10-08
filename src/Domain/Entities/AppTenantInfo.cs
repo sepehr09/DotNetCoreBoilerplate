@@ -9,4 +9,7 @@ public class AppTenantInfo : TenantInfo
     public string? CreatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public string? UpdatedBy { get; set; }
+    public string? JwtAuthority { get; set; }
+    public string? JwtIssuer { get; set; }
+    public string? JwtAudience { get; set; }
 }

@@ -39,6 +39,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
 
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         // Only enforce multi-tenancy if it's enabled

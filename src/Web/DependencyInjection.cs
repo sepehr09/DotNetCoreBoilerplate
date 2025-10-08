@@ -46,6 +46,11 @@ public static class DependencyInjection
             });
 
             configure.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWT"));
+
+            configure.PostProcess = (context) =>
+            {
+                context.BasePath = "http://localhost:5000";
+            };
         });
     }
 

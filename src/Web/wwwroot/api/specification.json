@@ -5,6 +5,11 @@
     "title": "MyApp API",
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "http://localhost:5000"
+    }
+  ],
   "paths": {
     "/api/TodoItems": {
       "get": {
@@ -234,7 +239,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -331,18 +341,18 @@
         }
       }
     },
-    "/api/Users/register": {
+    "/api/Users/Register": {
       "post": {
         "tags": [
           "Users"
         ],
-        "operationId": "PostApiUsersRegister",
+        "operationId": "Register",
         "requestBody": {
-          "x-name": "registration",
+          "x-name": "command",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RegisterRequest"
+                "$ref": "#/components/schemas/RegisterUserCommand"
               }
             }
           },
@@ -351,14 +361,11 @@
         },
         "responses": {
           "200": {
-            "description": ""
-          },
-          "400": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "$ref": "#/components/schemas/ResultOfAuthResponse"
                 }
               }
             }
@@ -366,38 +373,18 @@
         }
       }
     },
-    "/api/Users/login": {
+    "/api/Users/Login": {
       "post": {
         "tags": [
           "Users"
         ],
-        "operationId": "PostApiUsersLogin",
-        "parameters": [
-          {
-            "name": "useCookies",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "nullable": true
-            },
-            "x-position": 2
-          },
-          {
-            "name": "useSessionCookies",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "nullable": true
-            },
-            "x-position": 3
-          }
-        ],
+        "operationId": "Login",
         "requestBody": {
-          "x-name": "login",
+          "x-name": "command",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
+                "$ref": "#/components/schemas/LoginUserCommand"
               }
             }
           },
@@ -410,319 +397,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccessTokenResponse"
+                  "$ref": "#/components/schemas/ResultOfAuthResponse"
                 }
               }
             }
           }
         }
-      }
-    },
-    "/api/Users/refresh": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "PostApiUsersRefresh",
-        "requestBody": {
-          "x-name": "refreshRequest",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessTokenResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Users/confirmEmail": {
-      "get": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "GetApiUsersConfirmEmail",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "x-position": 1
-          },
-          {
-            "name": "code",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "x-position": 2
-          },
-          {
-            "name": "changedEmail",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "x-position": 3
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/Users/resendConfirmationEmail": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "PostApiUsersResendConfirmationEmail",
-        "requestBody": {
-          "x-name": "resendRequest",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResendConfirmationEmailRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/Users/forgotPassword": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "PostApiUsersForgotPassword",
-        "requestBody": {
-          "x-name": "resetRequest",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForgotPasswordRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Users/resetPassword": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "PostApiUsersResetPassword",
-        "requestBody": {
-          "x-name": "resetRequest",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetPasswordRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Users/manage/2fa": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "PostApiUsersManage2fa",
-        "requestBody": {
-          "x-name": "tfaRequest",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TwoFactorRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TwoFactorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT": []
-          }
-        ]
-      }
-    },
-    "/api/Users/manage/info": {
-      "get": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "GetApiUsersManageInfo",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InfoResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "PostApiUsersManageInfo",
-        "requestBody": {
-          "x-name": "infoRequest",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InfoRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InfoResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT": []
-          }
-        ]
       }
     },
     "/api/WeatherForecasts": {
@@ -984,228 +664,75 @@
           }
         }
       },
-      "HttpValidationProblemDetails": {
+      "ResultOfAuthResponse": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ProblemDetails"
+            "$ref": "#/components/schemas/Result"
           },
           {
             "type": "object",
-            "additionalProperties": {
-              "nullable": true
-            },
+            "additionalProperties": false,
             "properties": {
-              "errors": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
+              "data": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/AuthResponse"
                   }
-                }
+                ]
               }
             }
           }
         ]
       },
-      "ProblemDetails": {
-        "type": "object",
-        "additionalProperties": {
-          "nullable": true
-        },
-        "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "detail": {
-            "type": "string",
-            "nullable": true
-          },
-          "instance": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "RegisterRequest": {
+      "AuthResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "email": {
+          "token": {
             "type": "string"
-          },
-          "password": {
-            "type": "string"
-          }
-        }
-      },
-      "AccessTokenResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "tokenType": {
-            "type": "string"
-          },
-          "accessToken": {
-            "type": "string"
-          },
-          "expiresIn": {
-            "type": "integer",
-            "format": "int64"
           },
           "refreshToken": {
             "type": "string"
           }
         }
       },
-      "LoginRequest": {
+      "Result": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "email": {
-            "type": "string"
+          "succeeded": {
+            "type": "boolean"
           },
-          "password": {
-            "type": "string"
-          },
-          "twoFactorCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "twoFactorRecoveryCode": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "RefreshRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "refreshToken": {
-            "type": "string"
-          }
-        }
-      },
-      "ResendConfirmationEmailRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "email": {
-            "type": "string"
-          }
-        }
-      },
-      "ForgotPasswordRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "email": {
-            "type": "string"
-          }
-        }
-      },
-      "ResetPasswordRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "email": {
-            "type": "string"
-          },
-          "resetCode": {
-            "type": "string"
-          },
-          "newPassword": {
-            "type": "string"
-          }
-        }
-      },
-      "TwoFactorResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "sharedKey": {
-            "type": "string"
-          },
-          "recoveryCodesLeft": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "recoveryCodes": {
+          "errors": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
-          },
-          "isTwoFactorEnabled": {
-            "type": "boolean"
-          },
-          "isMachineRemembered": {
-            "type": "boolean"
           }
         }
       },
-      "TwoFactorRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "enable": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "twoFactorCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "resetSharedKey": {
-            "type": "boolean"
-          },
-          "resetRecoveryCodes": {
-            "type": "boolean"
-          },
-          "forgetMachine": {
-            "type": "boolean"
-          }
-        }
-      },
-      "InfoResponse": {
+      "RegisterUserCommand": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "email": {
             "type": "string"
           },
-          "isEmailConfirmed": {
-            "type": "boolean"
+          "password": {
+            "type": "string"
           }
         }
       },
-      "InfoRequest": {
+      "LoginUserCommand": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "newEmail": {
-            "type": "string",
-            "nullable": true
+          "email": {
+            "type": "string"
           },
-          "newPassword": {
-            "type": "string",
-            "nullable": true
-          },
-          "oldPassword": {
-            "type": "string",
-            "nullable": true
+          "password": {
+            "type": "string"
           }
         }
       },

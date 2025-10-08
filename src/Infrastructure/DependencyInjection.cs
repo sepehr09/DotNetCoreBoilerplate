@@ -1,14 +1,12 @@
-﻿using Finbuckle.MultiTenant;
-using Finbuckle.MultiTenant.Abstractions;
-using Finbuckle.MultiTenant.AspNetCore;
-using Finbuckle.MultiTenant.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
+﻿using System.Text;
+using Finbuckle.MultiTenant;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using MyApp.Application.Common.Exceptions;
+using Microsoft.IdentityModel.Tokens;
 using MyApp.Application.Common.Interfaces;
 using MyApp.Domain.Constants;
 using MyApp.Domain.Entities;
@@ -52,20 +50,73 @@ public static class DependencyInjection
             });
         }
 
-        /* -------------------------- Finbuckle.MultiTenant ------------------------- */
+        /* ----------------------------- Authentication ----------------------------- */
+        // Configure JWT Bearer authentication for single-tenant mode
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+                if (jwtSettings != null)
+                {
+                    options.RequireHttpsMetadata = builder.Environment.IsDevelopment(); // Disable HTTPS metadata requirement in development
+
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtSettings.Issuer,
+                        ValidAudience = jwtSettings.Audience,
+                        ClockSkew = TimeSpan.Zero,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+                    };
+                }
+            });
+
+        // Configure multi-tenancy
         if (builder.Configuration.GetValue<bool>("IsMultiTenant"))
         {
-            builder.Services.AddMultiTenant<AppTenantInfo>()
-                // .WithHostStrategy()
-                .WithStaticStrategy("TestTenant")
-                // .WithPerTenantAuthentication()
-                // .ShortCircuitWhenTenantNotResolved();
-                .WithDistributedCacheStore();
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddMultiTenant<AppTenantInfo>()
+                    .WithHeaderStrategy()
+                    .WithDistributedCacheStore()
+                    .WithPerTenantAuthentication();
+            }
+            else
+            {
+                builder.Services.AddMultiTenant<AppTenantInfo>()
+                    .WithHostStrategy()
+                    .WithDistributedCacheStore()
+                    .WithPerTenantAuthentication();
+            }
+
+            // Configure JWT options per tenant
+            builder.Services.ConfigurePerTenant<JwtBearerOptions, AppTenantInfo>(JwtBearerDefaults.AuthenticationScheme, (options, tenantInfo) =>
+            {
+                options.Authority = tenantInfo.JwtAuthority;
+                options.RequireHttpsMetadata = false; // Always disable HTTPS metadata requirement for tenant authentication
+
+                // Configure TokenValidationParameters per tenant
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ClockSkew = TimeSpan.Zero,
+                    ValidIssuer = tenantInfo.JwtIssuer ?? builder.Configuration["JwtSettings:Issuer"],
+                    ValidAudience = tenantInfo.JwtAudience ?? builder.Configuration["JwtSettings:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tenantInfo.JwtAuthority ?? builder.Configuration["JwtSettings:Secret"] ?? string.Empty))
+                };
+            });
         }
 
-        /* ----------------------------- Authentication ----------------------------- */
-        builder.Services.AddAuthentication()
-            .AddBearerToken(IdentityConstants.BearerScheme);
 
         /* ------------------------------ Authorization ----------------------------- */
         builder.Services.AddAuthorizationBuilder();
@@ -78,9 +129,14 @@ public static class DependencyInjection
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();
+        builder.Services.AddTransient<IJwtTokenService, JwtTokenService>();
 
         builder.Services.AddAuthorization(options =>
             options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
+
+
+        // JWT settings
+        builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
         // file storage services
         builder.Services.Configure<MinioSettings>(builder.Configuration.GetSection("MinIO"));

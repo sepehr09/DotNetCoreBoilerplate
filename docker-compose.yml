@@ -19,7 +19,7 @@ services:
       MinIO__BucketName: ${MINIO_BUCKET_NAME}
       MinIO__UseSSL: false
       JwtSettings__Secret: ${JWT_SECRET}
-      JwtSettings__ExpiryMinutes: ${JWT_EXPIRY_MINUTES}
+      JwtSettings__ExpiryHours: ${JWT_EXPIRY_MINUTES}
     depends_on:
       postgres:
         condition: service_healthy

@@ -83,12 +83,22 @@ public class ApplicationDbContextInitialiser
     {
         try
         {
+            // Check if we're in multi-tenant mode
+            var isMultiTenant = _configuration.GetValue<bool>("IsMultiTenant");
+
             // Default roles
             var administratorRole = new IdentityRole(Roles.Administrator);
 
-            if (_roleManager.Roles.All(r => r.Name != administratorRole.Name))
+            try
             {
-                await _roleManager.CreateAsync(administratorRole);
+                if (!string.IsNullOrWhiteSpace(administratorRole.Name) && !await _roleManager.RoleExistsAsync(administratorRole.Name))
+                {
+                    await _roleManager.CreateAsync(administratorRole);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error creating role, continuing with seeding...");
             }
 
             // Seed default users only in development environment
@@ -97,18 +107,29 @@ public class ApplicationDbContextInitialiser
                 // Default users
                 var administrator = new ApplicationUser { UserName = "administrator@localhost", Email = "administrator@localhost" };
 
-                if (_userManager.Users.All(u => u.UserName != administrator.UserName))
+                try
                 {
-                    await _userManager.CreateAsync(administrator, "Administrator1!");
-                    if (!string.IsNullOrWhiteSpace(administratorRole.Name))
+                    // Check if admin user already exists
+                    bool hasAdminUser = await _userManager.Users.AnyAsync(u => u.UserName == administrator.UserName);
+
+                    if (!hasAdminUser)
                     {
-                        await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
+                        var result = await _userManager.CreateAsync(administrator, "Administrator1!");
+                        if (result.Succeeded && !string.IsNullOrWhiteSpace(administratorRole.Name))
+                        {
+                            await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
+                        }
                     }
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error creating default user, continuing with seeding...");
                 }
             }
 
-            // Seed, if necessary
-            if (!_context.Tenants.Any() && _configuration.GetValue<bool>("IsMultiTenant"))
+            // Seed tenants only if not multi-tenant
+            if (!_context.Tenants.Any() && !isMultiTenant)
             {
                 _context.Tenants.Add(new Tenant
                 {
@@ -126,7 +147,8 @@ public class ApplicationDbContextInitialiser
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during database seeding");
-            throw;
+            // Don't throw the exception to prevent application startup failure
+            // Just log the error and continue
         }
     }
 }

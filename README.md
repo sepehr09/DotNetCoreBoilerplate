@@ -71,3 +71,5 @@ To learn more about the template go to the [project website](https://github.com/
 
 1. Multi tenancy feature can be enabled/disabled in `app settings` with `IsMultiTenant` bool.
 2. For Configure an entity type to be multi-tenant, use [IsMultiTenant()](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/EFCore#using-the-fluent-api) on EntityTypeBuilder.
+3. by default, in development mode, tenant resolution strategy is [Header Strategy](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/Strategies#header-strategy) and in production it configured to use [Host Strategy](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/Strategies#host-strategy). you can change settings in `src/Infrastructure/DependencyInjection.cs`
+4. tenant store is configured to read from redis, so after application startup, it load all tenants table to redis, happening in `src/Infrastructure/Data/ApplicationDbContextInitialiser.cs`.
