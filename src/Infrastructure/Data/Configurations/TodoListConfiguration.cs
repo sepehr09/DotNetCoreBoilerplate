@@ -1,6 +1,7 @@
-﻿using MyApp.Domain.Entities;
+﻿using Finbuckle.MultiTenant;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using MyApp.Domain.Entities;
 
 namespace MyApp.Infrastructure.Data.Configurations;
 
@@ -14,5 +15,7 @@ public class TodoListConfiguration : IEntityTypeConfiguration<TodoList>
 
         builder
             .OwnsOne(b => b.Colour);
+
+        builder.IsMultiTenant();
     }
 }

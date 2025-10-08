@@ -1,8 +1,8 @@
-﻿using MyApp.Application.TodoLists.Commands.CreateTodoList;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using MyApp.Application.TodoLists.Commands.CreateTodoList;
 using MyApp.Application.TodoLists.Commands.DeleteTodoList;
 using MyApp.Application.TodoLists.Commands.UpdateTodoList;
 using MyApp.Application.TodoLists.Queries.GetTodos;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace MyApp.Web.Endpoints;
 
@@ -11,9 +11,9 @@ public class TodoLists : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet(GetTodoLists).RequireAuthorization();
-        groupBuilder.MapPost(CreateTodoList).RequireAuthorization();
-        groupBuilder.MapPut(UpdateTodoList, "{id}").RequireAuthorization();
-        groupBuilder.MapDelete(DeleteTodoList, "{id}").RequireAuthorization();
+        groupBuilder.MapPost(CreateTodoList); // .RequireAuthorization();
+        groupBuilder.MapPut(UpdateTodoList, "{id}"); // .RequireAuthorization();
+        groupBuilder.MapDelete(DeleteTodoList, "{id}"); // .RequireAuthorization();
     }
 
     public async Task<Ok<TodosVm>> GetTodoLists(ISender sender)

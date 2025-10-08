@@ -11,6 +11,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__MyAppDb: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: redis:6379
       MinIO__Endpoint: minio:9000
       MinIO__PublicBaseUrl: ${MINIO_PUBLIC_BASE_URL}
       MinIO__AccessKey: ${MINIO_ROOT_USER}
@@ -18,9 +19,11 @@ services:
       MinIO__BucketName: ${MINIO_BUCKET_NAME}
       MinIO__UseSSL: false
       JwtSettings__Secret: ${JWT_SECRET}
-      JwtSettings__ExpiryMinutes: ${JWT_EXPIRY_MINUTES}
+      JwtSettings__ExpiryHours: ${JWT_EXPIRY_MINUTES}
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -48,6 +51,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - myApp_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
   minio:
     image: minio/minio:latest
@@ -79,4 +97,5 @@ networks:
 
 volumes:
   myApp-db:
+  redis-data:
   minio-data:

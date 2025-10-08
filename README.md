@@ -39,7 +39,7 @@ Create a new query:
 dotnet new ca-usecase -n GetTodos -fn TodoLists -ut query -rt TodosVm
 ```
 
-If you encounter the error *"No templates or subcommands found matching: 'ca-usecase'."*, install the template and try again:
+If you encounter the error _"No templates or subcommands found matching: 'ca-usecase'."_, install the template and try again:
 
 ```bash
 dotnet new install Clean.Architecture.Solution.Template::9.0.12
@@ -50,9 +50,28 @@ dotnet new install Clean.Architecture.Solution.Template::9.0.12
 The solution contains unit, integration, and functional tests.
 
 To run the tests:
-```bash
+
+```**bash**
 dotnet test
 ```
 
 ## Help
+
 To learn more about the template go to the [project website](https://github.com/jasontaylordev/CleanArchitecture). Here you can find additional guidance, request new features, report a bug, and discuss the template with other users.
+
+## Extras
+
+- Dockerized with postgresql and configured to pass `.env` file to appSettings.
+- MultiTenancy using finbuckle package.
+- FileStorage service using Minio (compatible with S3).
+- redis
+- configured Distributed caching (using redis)
+
+## Multi tenancy instruction
+
+1. Multi tenancy feature can be enabled/disabled in `app settings` with `IsMultiTenant` bool.
+2. For Configure an entity type to be multi-tenant, use [IsMultiTenant()](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/EFCore#using-the-fluent-api) on EntityTypeBuilder.
+3. by default, in development mode, tenant resolution strategy is [Header Strategy](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/Strategies#header-strategy) and in production it configured to use [Host Strategy](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/Strategies#host-strategy). you can change settings in `src/Infrastructure/DependencyInjection.cs`
+4. tenant store is configured to read from redis, so after application startup, it load all tenants table to redis, happening in `src/Infrastructure/Data/ApplicationDbContextInitialiser.cs`.
+5. If you have endpoints that do not require a tenant, then ExcludeFromMultiTenantResolution becomes a necessity, otherwise, these endpoints would never be reached because of `ShortCircuitWhenTenantNotResolved` is enabled in configs.
+6. always we have a root tenant for system. so we can have users for root system.
