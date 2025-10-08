@@ -129,11 +129,11 @@ public class ApplicationDbContextInitialiser
             }
 
             // Seed tenants only if not multi-tenant
-            if (!_context.Tenants.Any() && !isMultiTenant)
+            if (!_context.Tenants.Any() && isMultiTenant)
             {
                 _context.Tenants.Add(new Tenant
                 {
-                    Id = 1,
+                    Id = 2,
                     Identifier = "TestTenant",
                     Name = "Tenant just for test",
                     IsActive = true,

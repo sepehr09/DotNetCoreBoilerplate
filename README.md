@@ -73,3 +73,5 @@ To learn more about the template go to the [project website](https://github.com/
 2. For Configure an entity type to be multi-tenant, use [IsMultiTenant()](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/EFCore#using-the-fluent-api) on EntityTypeBuilder.
 3. by default, in development mode, tenant resolution strategy is [Header Strategy](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/Strategies#header-strategy) and in production it configured to use [Host Strategy](https://www.finbuckle.com/MultiTenant/Docs/v9.4.0/Strategies#host-strategy). you can change settings in `src/Infrastructure/DependencyInjection.cs`
 4. tenant store is configured to read from redis, so after application startup, it load all tenants table to redis, happening in `src/Infrastructure/Data/ApplicationDbContextInitialiser.cs`.
+5. If you have endpoints that do not require a tenant, then ExcludeFromMultiTenantResolution becomes a necessity, otherwise, these endpoints would never be reached because of `ShortCircuitWhenTenantNotResolved` is enabled in configs.
+6. always we have a root tenant for system. so we can have users for root system.

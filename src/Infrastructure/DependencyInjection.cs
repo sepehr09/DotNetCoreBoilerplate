@@ -81,18 +81,39 @@ public static class DependencyInjection
         // Configure multi-tenancy
         if (builder.Configuration.GetValue<bool>("IsMultiTenant"))
         {
+            var rootTenant = new AppTenantInfo
+            {
+                Id = "1",
+                Identifier = "root",
+                Name = "root",
+            };
+
             if (builder.Environment.IsDevelopment())
             {
                 builder.Services.AddMultiTenant<AppTenantInfo>()
-                    .WithHeaderStrategy()
+                    .WithInMemoryStore(options =>
+                        {
+                            options.IsCaseSensitive = true;
+                            options.Tenants.Add(rootTenant);
+                        })
                     .WithDistributedCacheStore()
+                    .WithHeaderStrategy()
+                    .WithStaticStrategy("root")
+                    .ShortCircuitWhenTenantNotResolved()
                     .WithPerTenantAuthentication();
             }
             else
             {
                 builder.Services.AddMultiTenant<AppTenantInfo>()
-                    .WithHostStrategy()
+                    .WithInMemoryStore(options =>
+                        {
+                            options.IsCaseSensitive = true;
+                            options.Tenants.Add(rootTenant);
+                        })
                     .WithDistributedCacheStore()
+                    .WithHostStrategy()
+                    .WithStaticStrategy("root")
+                    .ShortCircuitWhenTenantNotResolved()
                     .WithPerTenantAuthentication();
             }
 
