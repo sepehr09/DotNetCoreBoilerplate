@@ -17,6 +17,26 @@ public static class DependencyInjection
         builder.Services.AddScoped<IUser, CurrentUser>();
 
         builder.Services.AddHttpContextAccessor();
+
+        // Add CORS services
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("Development", policy =>
+            {
+                policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
+
+            options.AddPolicy("Production", policy =>
+            {
+                policy.WithOrigins("http://myapp.com")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
+        });
         builder.Services.AddHealthChecks()
             .AddDbContextCheck<ApplicationDbContext>();
 
@@ -26,9 +46,6 @@ public static class DependencyInjection
         // Customise default API behaviour
         builder.Services.Configure<ApiBehaviorOptions>(options =>
             options.SuppressModelStateInvalidFilter = true);
-
-        // Add CORS services for NSwag generation
-        builder.Services.AddCors();
 
         builder.Services.AddEndpointsApiExplorer();
 

@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using MyApp.Domain.Constants;
+using MyApp.Domain.Entities;
+using MyApp.Infrastructure.Identity;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MyApp.Domain.Constants;
-using MyApp.Infrastructure.Identity;
 
 namespace MyApp.Infrastructure.Data;
 
@@ -40,8 +40,9 @@ public class ApplicationDbContextInitialiser
     {
         try
         {
-            await _context.Database.MigrateAsync();
-
+            // See https://jasontaylor.dev/ef-core-database-initialisation-strategies
+            await _context.Database.EnsureDeletedAsync();
+            await _context.Database.EnsureCreatedAsync();
         }
         catch (Exception ex)
         {
@@ -81,8 +82,27 @@ public class ApplicationDbContextInitialiser
             await _userManager.CreateAsync(administrator, "Administrator1!");
             if (!string.IsNullOrWhiteSpace(administratorRole.Name))
             {
-                await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
+                await _userManager.AddToRolesAsync(administrator, new [] { administratorRole.Name });
             }
+        }
+
+        // Default data
+        // Seed, if necessary
+        if (!_context.TodoLists.Any())
+        {
+            _context.TodoLists.Add(new TodoList
+            {
+                Title = "Todo List",
+                Items =
+                {
+                    new TodoItem { Title = "Make a todo list 📃" },
+                    new TodoItem { Title = "Check off the first item ✅" },
+                    new TodoItem { Title = "Realise you've already done two things on the list! 🤯"},
+                    new TodoItem { Title = "Reward yourself with a nice, long nap 🏆" },
+                }
+            });
+
+            await _context.SaveChangesAsync();
         }
     }
 }
