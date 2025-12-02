@@ -10,7 +10,7 @@ IProcess webProcess = null;
 Task("Build")
     .Does(() => {
         Information("Building project...");
-        DotNetBuild("./MyApp.sln", new DotNetBuildSettings {
+        DotNetBuild("./MyApp.slnx", new DotNetBuildSettings {
             Configuration = configuration
         });
     });
@@ -66,7 +66,7 @@ Task("Test")
         };
 
 
-        DotNetTest("./MyApp.sln", testSettings);
+        DotNetTest("./MyApp.slnx", testSettings);
     });
 
 Teardown(context =>

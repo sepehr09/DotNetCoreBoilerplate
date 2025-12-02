@@ -15,27 +15,13 @@ await app.InitialiseDatabaseAsync();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseCors(corsPolicyBuilder =>
-    {
-        corsPolicyBuilder
-            .WithOrigins(["http://localhost:3000", "http://localhost:3001"])
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
+    app.UseCors("Development");
 }
 else
 {
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
-    app.UseCors(corsPolicyBuilder =>
-    {
-        corsPolicyBuilder
-            .WithOrigins(["http://myapp.com",])
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
+    app.UseCors("Production");
 }
 
 app.UseHealthChecks("/health");
