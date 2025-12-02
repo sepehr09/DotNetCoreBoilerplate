@@ -1,9 +1,9 @@
 # Use the official .NET 9 SDK image to build the application
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy the solution file and restore dependencies
-COPY ["MyApp.sln", "."]
+COPY ["MyApp.slnx", "."]
 COPY ["src/Web/Web.csproj", "src/Web/"]
 COPY ["src/Application/Application.csproj", "src/Application/"]
 COPY ["src/Domain/Domain.csproj", "src/Domain/"]
@@ -35,7 +35,7 @@ WORKDIR "/src/src/Web"
 RUN dotnet publish "Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Use the official .NET 9 ASP.NET Runtime image for the final stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 # Create a non-root user
