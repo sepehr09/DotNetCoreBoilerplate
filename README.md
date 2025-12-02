@@ -103,6 +103,12 @@ Never return raw entities or unwrapped collections from handlers.
 Use only predefined exception types handled in: `src/Web/Infrastructure/CustomExceptionHandler.cs`
 No custom or inline exceptions outside this handler. Always rely on centralized exception mapping for consistency.
 
+sample:
+
+```cs
+  throw new NotFoundException(nameof(TodoItem), request.Id.ToString());
+```
+
 ## current user
 
 you can use IUser and IIdentityService in application.
