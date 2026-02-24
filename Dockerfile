@@ -1,4 +1,4 @@
-# Use the official .NET 9 SDK image to build the application
+# Use the official .NET 10 SDK image to build the application
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
@@ -22,21 +22,18 @@ COPY . .
 WORKDIR "/src/src/Web"
 RUN dotnet build "Web.csproj" -c Release -o /app/build
 
-# Create a separate stage for running migrations
-FROM build AS migrations
-WORKDIR "/src"
-RUN dotnet tool install --global dotnet-ef
-ENV PATH="${PATH}:/root/.dotnet/tools"
-RUN dotnet ef database update -p src/Infrastructure -s src/Web
 
 # Publish the application
 FROM build AS publish
 WORKDIR "/src/src/Web"
 RUN dotnet publish "Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Use the official .NET 9 ASP.NET Runtime image for the final stage
+# Use the official .NET 10 ASP.NET Runtime image for the final stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+
+# Install curl for health check
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
 RUN groupadd --system --gid 1001 appgroup && \
@@ -58,9 +55,8 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:8080/health || exit 1
 
 
